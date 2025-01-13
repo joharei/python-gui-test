@@ -1,0 +1,53 @@
+name: Build distributables
+on: workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Delete unused database drivers
+        shell: bash
+        run: find . -type d -name 'sqldrivers' | xargs -I% find "%" -type f ! -name '*qsqlite.*' -delete
+
+      - name: Build Executable
+        run: >
+          uv run -m nuitka
+          --mode=app
+          --enable-plugin=pyside6
+          --include-qt-plugins=sqldrivers
+          --script-name=src/main.py
+          --assume-yes-for-downloads
+          --output-dir=build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }} Build
+          path: |
+            build/*.exe
+            build/*.bin
+            build/*.app/**/*
+          include-hidden-files: true

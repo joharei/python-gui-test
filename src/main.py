@@ -1,32 +1,15 @@
-import sys
-import typing as tp
+# Compilation mode, standalone everywhere, except on macOS there app bundle
+# nuitka-project-if: {OS} in ("Windows", "Linux", "FreeBSD"):
+#    nuitka-project: --onefile
+# nuitka-project-if: {OS} == "Darwin":
+#    nuitka-project: --standalone
+#    nuitka-project: --macos-create-app-bundle
+# nuitka-project: --enable-plugin=pyside6
+# nuitka-project: --include-qt-plugins=sqldrivers
 
-import edifice as ed
-from PySide6 import QtWidgets
-from edifice import App, Window, component, use_state
+from edifice import App
 
-from data.db_connection import create_connection
-from ui.features.main_window.main_window import MainWindow
-
-
-@component
-def MyApp(self):
-	def initializer():
-		if not create_connection():
-			sys.exit(-1)
-
-		qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())
-		qapp.setApplicationName("Python GUI test")
-		if ed.theme_is_light():
-			qapp.setPalette(ed.palette_edifice_light())
-		else:
-			qapp.setPalette(ed.palette_edifice_dark())
-
-	_, _ = use_state(initializer)
-
-	with Window(title="Python GUI test", _size_open=(520, 350)):
-		MainWindow()
-
+from ui.app import MyApp
 
 if __name__ == "__main__":
 	App(MyApp()).start()

@@ -5,14 +5,14 @@ import edifice as ed
 from PySide6 import QtWidgets
 from edifice import Window, component, use_state
 
-from data.db_connection import create_connection
+from data.create_db import connect_to_database
 from ui.features.main_window.main_window import MainWindow
 
 
 @component
 def MyApp(self):
     def initializer():
-        if not create_connection():
+        if not connect_to_database():
             sys.exit(-1)
 
         qapp = tp.cast(QtWidgets.QApplication, QtWidgets.QApplication.instance())

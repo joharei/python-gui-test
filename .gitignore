@@ -11,3 +11,4 @@ wheels/
 
 # Project specific
 test.db
+test.log

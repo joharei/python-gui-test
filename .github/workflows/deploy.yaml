@@ -32,6 +32,28 @@ jobs:
         shell: bash
         run: find . -type d -name 'sqldrivers' | xargs -I% find "%" -type f ! -name '*qsqlite.*' -delete
 
+      - name: Setup Environment Variables
+        shell: bash
+        run: |
+          echo "NUITKA_CACHE_DIR=${{ github.action_path }}/nuitka/cache" >> $GITHUB_ENV
+          echo "PYTHON_VERSION=$(python --version | awk '{print $2}' | cut -d '.' -f 1,2)" >> $GITHUB_ENV
+
+      - name: Install ccache
+        if: ${{ runner.os == 'Linux' }}
+        shell: bash
+        run: |
+          sudo apt-get install -y ccache
+
+      - name: Cache Nuitka cache directory
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUITKA_CACHE_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-python-${{ env.PYTHON_VERSION }}-nuitka-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-python-${{ env.PYTHON_VERSION }}-
+            ${{ runner.os }}-${{ runner.arch }}-python-
+            ${{ runner.os }}-${{ runner.arch }}-
+
       - name: Build Executable
         run: >
           uv run -m nuitka
